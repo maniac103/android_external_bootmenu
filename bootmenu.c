@@ -177,16 +177,102 @@ static int compare_string(const void* a, const void* b) {
   return strcmp(*(const char**)a, *(const char**)b);
 }
 
+static int translate_key_to_symbol(int value, int to_symbol) {
+  unsigned int i;
+
+  static const struct {
+    int key;
+    char symbol;
+  } keys[] = {
+    { KEY_MENU, 'M' },
+    { KEY_HOME, 'H' },
+    { KEY_BACK, 'B' },
+    { KEY_SEARCH, 'S' }
+  };
+
+  for (i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
+    if (to_symbol) {
+      if (value == keys[i].key) {
+        return keys[i].symbol;
+      }
+    } else {
+      if (value == keys[i].symbol) {
+        return keys[i].key;
+      }
+    }
+  }
+
+  return 0;
+}
+
+static int check_pin() {
+  FILE *pin_file = fopen("/tmp/data/secure/bootmenu_pin", "r");
+  char pin[40];
+  unsigned int pos = 0, retries = 3;
+  int i, count;
+
+  if (!pin_file) {
+    return 1;
+  }
+  count = fread(pin, 1, sizeof(pin), pin_file);
+  fclose(pin_file);
+
+  if (count <= 0) {
+    return 1;
+  }
+
+  pin[count] = 0;
+  for (i = 0; i < count; i++) {
+    if (translate_key_to_symbol(pin[i], 0) == 0) {
+      pin[i] = 0;
+      break;
+    }
+  }
+
+  for (; retries > 0; ) {
+    ui_clear_key_queue();
+    ui_print_str("Please enter PIN code: ");
+
+    for (;;) {
+      int key = ui_wait_key();
+      char symbol = translate_key_to_symbol(key, 1);
+
+      if (symbol == 0) {
+        continue;
+      }
+      if (symbol == pin[pos]) {
+        ui_print_str("*");
+        pos++;
+        if (pin[pos] == 0) {
+          ui_print_str("\n");
+          return 1;
+        }
+        continue;
+      }
+
+      ui_print(" (%d retries left.)\n", --retries);
+      pos = 0;
+      break;
+    }
+  }
+
+  ui_print_str("\nPIN verification failed.\nShutting down.\n");
+  usleep(2000000);
+  return 0;
+}
+
+static void power_off() {
+  sync();
+  __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_POWER_OFF, NULL);
+}
+
 /**
  * prompt_and_wait()
  *
  */
 static void prompt_and_wait() {
-
-  int select = 0;
-
+  int select = ITEM_REBOOT;
   for (;;) {
-
     int chosen_item = get_menu_selection(main_headers, MENU_ITEMS, 0, select);
 
     // device-specific code may take some action here.  It may
@@ -219,8 +305,7 @@ static void prompt_and_wait() {
         if (show_menu_tools()) return;
         break;
       case ITEM_POWEROFF:
-        sync();
-        __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_POWER_OFF, NULL);
+        power_off();
         return;
       }
 
@@ -387,7 +472,11 @@ static int run_bootmenu(void) {
         checkup_report();
         ui_reset_progress();
 
-        prompt_and_wait();
+        if (mode != int_mode("bootmenu") && !check_pin()) {
+          power_off();
+        } else {
+          prompt_and_wait();
+        }
         free_menu_headers(main_headers);
 
         ui_finish();

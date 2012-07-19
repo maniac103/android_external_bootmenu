@@ -59,12 +59,18 @@ chmod 666 /dev/graphics/fb0
 ## /default.prop replace.. (TODO: check if that works)
 cp -f /system/bootmenu/config/default.prop /default.prop
 
-## mount cache
+## mount cache & data
 mkdir -p /cache
+mkdir -p /tmp/data
 
 # stock mount, with fsck
 if [ -x /system/bin/mount_ext3.sh ]; then
     /system/bin/mount_ext3.sh cache /cache
+    /system/bin/mount_ext3.sh data /tmp/data
+fi
+
+if [ ! -d /tmp/data/data ]; then
+    mount -t $FS_DATA -o ro $PART_DATA /tmp/data
 fi
 
 # mount cache for boot mode and recovery logs
