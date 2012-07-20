@@ -47,7 +47,7 @@ cp -f /system/bootmenu/binary/lsof /sbin/lsof
 $BB chmod +rx /sbin/*
 
 # custom adbd (allow always root)
-cp -f /system/bootmenu/binary/adbd /sbin/adbd.root
+cp -f /system/bootmenu/binary/adbd.root /sbin/adbd.root
 chown 0.0 /sbin/adbd.root
 chmod 4755 /sbin/adbd.root
 
