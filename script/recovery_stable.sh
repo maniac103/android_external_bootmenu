@@ -78,6 +78,7 @@ fi
 #############################
 # mount in /sbin/postrecoveryboot.sh
 umount /system
+umount /tmp/data
 
 usleep 50000
 mount -t $FS_SYSTEM -o rw,noatime,nodiratime $PART_SYSTEM /system
