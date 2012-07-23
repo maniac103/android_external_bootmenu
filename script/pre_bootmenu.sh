@@ -61,16 +61,16 @@ cp -f /system/bootmenu/config/default.prop /default.prop
 
 ## mount cache & data
 mkdir -p /cache
-mkdir -p /tmp/data
+mkdir -p /data
 
 # stock mount, with fsck
 if [ -x /system/bin/mount_ext3.sh ]; then
     /system/bin/mount_ext3.sh cache /cache
-    /system/bin/mount_ext3.sh data /tmp/data
+    /system/bin/mount_ext3.sh data /data
 fi
 
-if [ ! -d /tmp/data/data ]; then
-    mount -t $FS_DATA -o ro $PART_DATA /tmp/data
+if [ ! -d /data/data ]; then
+    mount -t $FS_DATA -o noatime,nodiratime,errors=continue $PART_DATA /data
 fi
 
 # mount cache for boot mode and recovery logs

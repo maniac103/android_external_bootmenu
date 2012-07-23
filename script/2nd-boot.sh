@@ -23,7 +23,6 @@ umount /dev/pts
 umount /mnt/obb
 umount /cache
 umount /data
-umount /tmp/data
 
 ######## Cleanup
 

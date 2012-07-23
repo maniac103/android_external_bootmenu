@@ -206,7 +206,7 @@ static int translate_key_to_symbol(int value, int to_symbol) {
 }
 
 static int check_pin() {
-  FILE *pin_file = fopen("/tmp/data/secure/bootmenu_pin", "r");
+  FILE *pin_file = fopen("/data/secure/bootmenu_pin", "r");
   char pin[40];
   unsigned int pos = 0, retries = 3;
   int i, count;
