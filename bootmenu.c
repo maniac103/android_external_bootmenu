@@ -284,7 +284,7 @@ static void prompt_and_wait() {
       switch (chosen_item) {
       case ITEM_REBOOT:
         sync();
-        reboot(RB_AUTOBOOT);
+        reboot_wrapper(NULL);
         return;
       case ITEM_BOOT:
         if (show_menu_boot()) return;
